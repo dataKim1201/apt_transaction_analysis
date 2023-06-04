@@ -27,11 +27,14 @@ def regression_results(y_true, y_pred,verbose=False):
 
 if __name__=='__main__':
     df = pd.read_csv('전처리_완료/12_22아파트매매.csv')
-    ultra = onehotencoding(scaling(*bodong_merge_data(*social_merge_data(*economic_merge_data(df)))))
+    df = preprocess(df)
+    ultra,min_max_sc,st_sc = scaling(*bodong_merge_data(*social_merge_data(*economic_merge_data(df))))
+    ultra = onehotencoding(ultra)
     X_train, X_test, y_train, y_test = get_x_y(ultra)
     tscv = TimeSeriesSplit(n_splits=3)
     model = RandomForestRegressor(n_estimators = 100)
     tscv = TimeSeriesSplit(n_splits=3)
+    print('train columns', X_train.columns)
     for i, (train_index, test_index) in enumerate(tscv.split(X_train)):
         train,valid = X_train.iloc[train_index,:],X_train.iloc[test_index,:]
         train_y,valid_y = y_train.iloc[train_index],y_train.iloc[test_index]
@@ -40,5 +43,7 @@ if __name__=='__main__':
         print(f'{i + 1} result RandomForest predict result with using')
         rmse,r2 = regression_results(valid_y,y_pred)
     joblib.dump(model,'rf_model.pkl')
+    joblib.dump(min_max_sc,'mm_scaler.pkl')
+    joblib.dump(st_sc,'st_scaler.pkl')
     # joblib.load('rf_model.pkl') 
 
